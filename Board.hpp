@@ -3,10 +3,12 @@
 
 #include <iostream>
 #include <vector>
+#include <limits>
 
 #define Move pair<int, int> // Define Move as a pair of integers for row and column indices
 #define HUMAN 'R'
 #define AI 'B'
+#define DEPTH 4 // Depth for the minimax algorithm
 using namespace std;
 
 class cell
@@ -34,7 +36,7 @@ private:
 
     vector<Move> get_valid_moves(char color);
     bool is_valid_move(int row, int col, char color);
-    //bool update_cell(Move move, char color);
+    // bool update_cell(Move move, char color);
     int get_critical_mass(int row, int col);
     void generate_explosion(int start_row, int start_col, char current_player);
     int count_of_orbs(char current_player);
@@ -45,12 +47,12 @@ private:
 
     // heuristics
     int orb_difference(char player);
+
 public:
     Board(int rows, int cols) : rows(rows), cols(cols), cells(rows, vector<cell>(cols)) {}
     Board(const Board &other) : rows(other.rows), cols(other.cols), cells(other.cells) {}
     void set_board(const vector<vector<cell>> &new_cells);
     void print_board();
-    
 };
 
 void Board::set_board(const vector<vector<cell>> &new_cells)
@@ -215,7 +217,8 @@ int Board::count_of_orbs(char current_player)
     return count;
 }
 
-void Board::print_board() {
+void Board::print_board()
+{
     for (int i = 0; i < rows; i++)
     {
         for (int j = 0; j < cols; j++)
@@ -226,7 +229,8 @@ void Board::print_board() {
     }
 }
 
-int Board::orb_difference(char player) {
+int Board::orb_difference(char player)
+{
     int score = 0;
     for (int i = 0; i < this->rows; i++)
     {
@@ -234,9 +238,12 @@ int Board::orb_difference(char player) {
         {
             char cell_color = this->cells[i][j].get_color();
             int cell_count = this->cells[i][j].get_count();
-            if (cell_color == player) {
+            if (cell_color == player)
+            {
                 score += cell_count; // Add count for player's cells
-            } else if (cell_color != '\0') { // If the cell is occupied by the opponent
+            }
+            else if (cell_color != '\0')
+            {                        // If the cell is occupied by the opponent
                 score -= cell_count; // Subtract count for opponent's cells
             }
         }
@@ -244,14 +251,71 @@ int Board::orb_difference(char player) {
     return score; // Return the final score
 }
 
-int Board::evaluate_board(char player) {
+int Board::evaluate_board(char player)
+{
     int score = orb_difference(player); // Calculate the score based on orb difference
-    return score; // Return the final score
+    return score;                       // Return the final score
 }
 
-int Board::minimax(int depth, bool is_maximizing_player) {
-    if(depth == 0 || is_terminal_state()) {
+bool Board::is_terminal_state()
+{
+    bool human_has_orbs = false;
+    bool ai_has_orbs = false;
+    for (int i = 0; i < this->rows; i++)
+    {
+        for (int j = 0; j < this->cols; j++)
+        {
+            char cell_color = this->cells[i][j].get_color();
+            if (cell_color == HUMAN)
+            {
+                human_has_orbs = true; // Human player has orbs
+            }
+            else if (cell_color == AI)
+            {
+                ai_has_orbs = true; // AI player has orbs
+            }
+
+            if (human_has_orbs && ai_has_orbs)
+            {
+                return false; // Both players have orbs, not a terminal state
+            }
+        }
+    }
+    return true; // One or both players have no orbs, terminal state
+}
+
+int Board::minimax(int depth, bool is_maximizing_player)
+{
+    if (depth == 0 || is_terminal_state())
+    {
         return evaluate_board(is_maximizing_player ? AI : HUMAN); // Evaluate the board for the current player
+    }
+
+    if (is_maximizing_player)
+    {
+        int max_eval = numeric_limits<int>::min(); // Initialize to a very low value
+        vector<Move> valid_moves = get_valid_moves(AI);
+        for (const Move &move : valid_moves)
+        {
+            Board new_board = *this;                        // Create a copy of the current board
+            new_board.update_cell(move, AI);                // Apply the move
+            int eval = new_board.minimax(depth - 1, false); // Minimize for the opponent
+            max_eval = max(max_eval, eval);                 // Update max evaluation
+        }
+        return max_eval; // Return the best score for AI
+    }
+    else
+    {
+        int min_eval = numeric_limits<int>::max(); // Initialize to a very high value
+        vector<Move> valid_moves = get_valid_moves(HUMAN);
+        for (const Move &move : valid_moves)
+        {
+            Board new_board = *this;                       // Create a copy of the current board
+            new_board.update_cell(move, HUMAN);            // Apply the move
+            int eval = new_board.minimax(depth - 1, true); // Maximize for AI
+            min_eval = min(min_eval, eval);                // Update min evaluation
+        }
+        return min_eval; // Return the best score for Human
     }
 }
 
