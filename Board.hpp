@@ -8,7 +8,7 @@
 #define Move pair<int, int> // Define Move as a pair of integers for row and column indices
 #define HUMAN 'R'
 #define AI 'B'
-#define DEPTH 4 // Depth for the minimax algorithm
+#define DEPTH 3 // Depth for the minimax algorithm
 using namespace std;
 
 class cell
@@ -289,7 +289,7 @@ int Board::minimax(int depth, bool is_maximizing_player)
 {
     if (depth == 0 || is_terminal_state())
     {
-        return evaluate_board(is_maximizing_player ? AI : HUMAN); // Evaluate the board for the current player
+        return evaluate_board(AI);
     }
 
     if (is_maximizing_player)
@@ -328,9 +328,11 @@ pair<int, Move> Board::get_ai_move()
     vector<Move> valid_moves = get_valid_moves(AI);
     for(const Move &move : valid_moves)
     {
+        cout  << "Evaluating move: (" << move.first << ", " << move.second << ") ";
         Board new_board = *this;
         new_board.update_cell(move, AI); 
         int move_value = new_board.minimax(DEPTH - 1, false); // Evaluate the move using minimax
+        cout << "Move value: " << move_value << endl;
         if (move_value > best_value)
         {
             best_value = move_value; // Update the best value
