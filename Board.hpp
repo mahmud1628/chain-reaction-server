@@ -34,7 +34,7 @@ private:
 
     vector<Move> get_valid_moves(char color);
     bool is_valid_move(int row, int col, char color);
-    bool update_board(Move move, char color);
+    //bool update_board(Move move, char color);
     int get_critical_mass(int row, int col);
     void generate_explosion(int start_row, int start_col, char current_player);
     int count_of_orbs(char current_player);
@@ -43,6 +43,8 @@ public:
     Board(int rows, int cols) : rows(rows), cols(cols), cells(rows, vector<cell>(cols)) {}
     Board(const Board &other) : rows(other.rows), cols(other.cols), cells(other.cells) {}
     void set_board(const vector<vector<cell>> &new_cells);
+    void print_board();
+    bool update_board(Move move, char current_player);
 };
 
 void Board::set_board(const vector<vector<cell>> &new_cells)
@@ -140,10 +142,10 @@ void Board::generate_explosion(int start_row, int start_col, char current_player
     while (!indices_of_current_exploding_cells.empty())
     {
         vector<pair<int, int>> indices_of_next_exploding_cells;
-        for (auto &cell : indices_of_current_exploding_cells)
+        for (auto &index : indices_of_current_exploding_cells)
         {
-            int row = cell.first;
-            int col = cell.second;
+            int row = index.first;
+            int col = index.second;
 
             // Reset the cell count
             this->cells[row][col].set_count(0);
@@ -164,7 +166,7 @@ void Board::generate_explosion(int start_row, int start_col, char current_player
                 bool is_valid_row = orthogonal_row >= 0 && orthogonal_row < this->rows;
                 bool is_valid_col = orthogonal_col >= 0 && orthogonal_col < this->cols;
                 bool is_valid_index = is_valid_row && is_valid_col;
-                if (is_valid_row)
+                if (is_valid_index)
                 {
                     if (this->cells[orthogonal_row][orthogonal_col].get_color() == opponent_player)
                     {
@@ -188,6 +190,7 @@ void Board::generate_explosion(int start_row, int start_col, char current_player
             return;
         }
     }
+    return; // end of while loop
 }
 
 int Board::count_of_orbs(char current_player)
@@ -204,6 +207,17 @@ int Board::count_of_orbs(char current_player)
         }
     }
     return count;
+}
+
+void Board::print_board() {
+    for (int i = 0; i < rows; i++)
+    {
+        for (int j = 0; j < cols; j++)
+        {
+            cout << cells[i][j].get_count() << cells[i][j].get_color() << "\t";
+        }
+        cout << endl; // New line after each row
+    }
 }
 
 #endif // _BOARD_HPP

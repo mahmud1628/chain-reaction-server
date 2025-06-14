@@ -17,7 +17,6 @@ int main() {
     vector<vector<cell>> cells(ROWS, vector<cell>(COLS));
     string line;
     getline(inputFile, line); // Read the first line (header)
-    cout << line << endl;
     if(line != "Human Move:") {
         cerr << "Invalid file format or not a human move." << endl;
         return 1;
@@ -45,5 +44,12 @@ int main() {
 
     Board board(ROWS, COLS);
     board.set_board(cells);
+    board.update_board(Move(5, 3), 'B');
+    board.update_board(Move(0, 1), 'R');
+    board.update_board(Move(5, 2), 'B');
+    board.update_board(Move(0, 1), 'R');
+    board.update_board(Move(1, 0), 'B');
+    board.update_board(Move(0, 0), 'R');
+    board.print_board();
     return 0;
 }
