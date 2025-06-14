@@ -45,7 +45,28 @@ int main() {
     Board board(ROWS, COLS);
     board.set_board(cells);
     pair<int, pair<int, int>> result = board.get_ai_move();
-    cout << "Best value: " << result.first << endl;
-    cout << "Best move: (" << result.second.first << ", " << result.second.second << ")" << endl;
+    int  best_value = result.first;
+    int best_row = result.second.first;
+    int best_col = result.second.second;
+    cout << "Best value: " << best_value << endl;
+    cout << "Best move: (" << best_row << ", " << best_col << ")" << endl;
+
+    cells[best_row][best_col].set_count(cells[best_row][best_col].get_count() + 1);
+    cells[best_row][best_col].set_color(AI);
+
+    ofstream outputFile("../gameState.txt");
+    if (!outputFile) {
+        cerr << "Error opening file for writing." << endl;
+        return 1;
+    }
+    outputFile << "AI Move:" << endl;
+    for (int i = 0; i < ROWS; i++) {
+        for (int j = 0; j < COLS; j++) {
+            outputFile << cells[i][j].get_count() << cells[i][j].get_color() << " ";
+        }
+        outputFile << endl;
+    }
+    outputFile.close();
+    cout << "AI move saved to gameState.txt" << endl;
     return 0;
 }
