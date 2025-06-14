@@ -34,17 +34,23 @@ private:
 
     vector<Move> get_valid_moves(char color);
     bool is_valid_move(int row, int col, char color);
-    //bool update_board(Move move, char color);
+    //bool update_cell(Move move, char color);
     int get_critical_mass(int row, int col);
     void generate_explosion(int start_row, int start_col, char current_player);
     int count_of_orbs(char current_player);
+    bool update_cell(Move move, char current_player);
+    int minimax(int depth, bool is_maximizing_player);
+    int evaluate_board(char player);
+    bool is_terminal_state();
 
+    // heuristics
+    int orb_difference(char player);
 public:
     Board(int rows, int cols) : rows(rows), cols(cols), cells(rows, vector<cell>(cols)) {}
     Board(const Board &other) : rows(other.rows), cols(other.cols), cells(other.cells) {}
     void set_board(const vector<vector<cell>> &new_cells);
     void print_board();
-    bool update_board(Move move, char current_player);
+    
 };
 
 void Board::set_board(const vector<vector<cell>> &new_cells)
@@ -111,7 +117,7 @@ vector<Move> Board::get_valid_moves(char color)
     return valid_moves; // Return the list of valid moves
 }
 
-bool Board::update_board(Move move, char current_player)
+bool Board::update_cell(Move move, char current_player)
 {
     int row = move.first;
     int col = move.second;
@@ -217,6 +223,35 @@ void Board::print_board() {
             cout << cells[i][j].get_count() << cells[i][j].get_color() << "\t";
         }
         cout << endl; // New line after each row
+    }
+}
+
+int Board::orb_difference(char player) {
+    int score = 0;
+    for (int i = 0; i < this->rows; i++)
+    {
+        for (int j = 0; j < this->cols; j++)
+        {
+            char cell_color = this->cells[i][j].get_color();
+            int cell_count = this->cells[i][j].get_count();
+            if (cell_color == player) {
+                score += cell_count; // Add count for player's cells
+            } else if (cell_color != '\0') { // If the cell is occupied by the opponent
+                score -= cell_count; // Subtract count for opponent's cells
+            }
+        }
+    }
+    return score; // Return the final score
+}
+
+int Board::evaluate_board(char player) {
+    int score = orb_difference(player); // Calculate the score based on orb difference
+    return score; // Return the final score
+}
+
+int Board::minimax(int depth, bool is_maximizing_player) {
+    if(depth == 0 || is_terminal_state()) {
+        return evaluate_board(is_maximizing_player ? AI : HUMAN); // Evaluate the board for the current player
     }
 }
 
