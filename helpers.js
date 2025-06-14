@@ -25,4 +25,24 @@ const write_game_state = (board) => {
     });
 }
 
+const get_ai_move = (board) => {
+    const file_data = fs.readFileSync(file_path, 'utf8');
+    const lines = file_data.split('\n').slice(1); // Skip "AI Move:"
+    for (let i = 0; i < board.length; i++) {
+        if (!lines[i]) continue;
+        const cells = lines[i].trim().split(' ');
+        for (let j = 0; j < board[i].length; j++) {
+            let cell = board[i][j];
+            let file_cell = cells[j];
+            let expected = (cell.count === 0 && cell.color === null) ? '0' : `${cell.count}${cell.color}`;
+            if (file_cell !== expected) {
+                return { row: i, col: j };
+            }
+        }
+    }
+    return null;
+}
+
+
 exports.write_game_state = write_game_state;
+exports.get_ai_move = get_ai_move;
