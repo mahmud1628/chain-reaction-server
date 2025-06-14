@@ -3,7 +3,7 @@ const path = require('path');
 const file_path = path.join(__dirname, '../gameState.txt');
 
 const write_game_state = (board) => {
-    let data = 'Human Move: \n';
+    let data = 'Human Move:\n';
     for(let i = 0; i < board.length; i++) {
         for(let j = 0; j < board[i].length; j++) {
             let cell = board[i][j];
