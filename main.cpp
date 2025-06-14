@@ -44,7 +44,7 @@ int main() {
 
     Board board(ROWS, COLS);
     board.set_board(cells);
-    pair<int, pair<int, int>> result = board.get_ai_move(); // Get AI move based on the current board state
+    pair<int, pair<int, int>> result = board.get_ai_move();
     cout << "Best value: " << result.first << endl;
     cout << "Best move: (" << result.second.first << ", " << result.second.second << ")" << endl;
     return 0;

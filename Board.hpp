@@ -41,7 +41,7 @@ private:
     void generate_explosion(int start_row, int start_col, char current_player);
     int count_of_orbs(char current_player);
     bool update_cell(Move move, char current_player);
-    int minimax(int depth, bool is_maximizing_player);
+    int minimax(int depth, bool is_maximizing_player, int alpha, int beta);
     int evaluate_board(char player);
     bool is_terminal_state();
 
@@ -285,38 +285,48 @@ bool Board::is_terminal_state()
     return true; // One or both players have no orbs, terminal state
 }
 
-int Board::minimax(int depth, bool is_maximizing_player)
+int Board::minimax(int depth, bool is_maximizing_player, int alpha, int beta)
 {
     if (depth == 0 || is_terminal_state())
     {
         return evaluate_board(AI);
     }
 
-    if (is_maximizing_player)
+    if (is_maximizing_player) // for AI player
     {
-        int max_eval = numeric_limits<int>::min(); // Initialize to a very low value
+        int max_eval = numeric_limits<int>::min();
         vector<Move> valid_moves = get_valid_moves(AI);
         for (const Move &move : valid_moves)
         {
-            Board new_board = *this;                        // Create a copy of the current board
-            new_board.update_cell(move, AI);                // Apply the move
-            int eval = new_board.minimax(depth - 1, false); // Minimize for the opponent
-            max_eval = max(max_eval, eval);                 // Update max evaluation
+            Board new_board = *this;
+            new_board.update_cell(move, AI);
+            int eval = new_board.minimax(depth - 1, false,alpha, beta);
+            max_eval = max(max_eval, eval);
+            alpha = max(alpha, eval);
+            if(beta <= alpha)
+            {
+                break; // Stop searching if the current branch is worse than the best found so far
+            }
         }
-        return max_eval; // Return the best score for AI
+        return max_eval;
     }
-    else
+    else // for human player
     {
-        int min_eval = numeric_limits<int>::max(); // Initialize to a very high value
+        int min_eval = numeric_limits<int>::max();
         vector<Move> valid_moves = get_valid_moves(HUMAN);
         for (const Move &move : valid_moves)
         {
-            Board new_board = *this;                       // Create a copy of the current board
-            new_board.update_cell(move, HUMAN);            // Apply the move
-            int eval = new_board.minimax(depth - 1, true); // Maximize for AI
-            min_eval = min(min_eval, eval);                // Update min evaluation
+            Board new_board = *this;
+            new_board.update_cell(move, HUMAN);
+            int eval = new_board.minimax(depth - 1, true, alpha, beta);
+            min_eval = min(min_eval, eval);
+            beta = min(beta, eval);
+            if(beta <= alpha)
+            {
+                break; // Stop searching if the current branch is worse than the best found so far
+            }
         }
-        return min_eval; // Return the best score for Human
+        return min_eval;
     }
 }
 
@@ -331,15 +341,15 @@ pair<int, Move> Board::get_ai_move()
         cout  << "Evaluating move: (" << move.first << ", " << move.second << ") ";
         Board new_board = *this;
         new_board.update_cell(move, AI); 
-        int move_value = new_board.minimax(DEPTH - 1, false); // Evaluate the move using minimax
+        int move_value = new_board.minimax(DEPTH - 1, false, numeric_limits<int>::min(), numeric_limits<int>::max());
         cout << "Move value: " << move_value << endl;
         if (move_value > best_value)
         {
-            best_value = move_value; // Update the best value
-            best_move = move;        // Update the best move
+            best_value = move_value;
+            best_move = move;
         }
     }
-    return make_pair(best_value, best_move); // Return the best move and its value
+    return make_pair(best_value, best_move);
 }
 
 #endif // _BOARD_HPP
