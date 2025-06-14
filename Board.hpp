@@ -53,6 +53,7 @@ public:
     Board(const Board &other) : rows(other.rows), cols(other.cols), cells(other.cells) {}
     void set_board(const vector<vector<cell>> &new_cells);
     void print_board();
+    pair<int, Move> get_ai_move();
 };
 
 void Board::set_board(const vector<vector<cell>> &new_cells)
@@ -317,6 +318,26 @@ int Board::minimax(int depth, bool is_maximizing_player)
         }
         return min_eval; // Return the best score for Human
     }
+}
+
+pair<int, Move> Board::get_ai_move()
+{
+    int best_value = numeric_limits<int>::min();
+    Move best_move = {-1, -1};
+
+    vector<Move> valid_moves = get_valid_moves(AI);
+    for(const Move &move : valid_moves)
+    {
+        Board new_board = *this;
+        new_board.update_cell(move, AI); 
+        int move_value = new_board.minimax(DEPTH - 1, false); // Evaluate the move using minimax
+        if (move_value > best_value)
+        {
+            best_value = move_value; // Update the best value
+            best_move = move;        // Update the best move
+        }
+    }
+    return make_pair(best_value, best_move); // Return the best move and its value
 }
 
 #endif // _BOARD_HPP
