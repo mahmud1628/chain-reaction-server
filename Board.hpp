@@ -353,7 +353,7 @@ int Board::depth()
 {
     int total_orbs = count_of_orbs(HUMAN) + count_of_orbs(AI);
     if (total_orbs <= 10)
-        return 5; // Early game
+        return 3; // Early game
     else if (total_orbs <= 20)
         return 3; // Mid game
     else if( total_orbs <= 30)
