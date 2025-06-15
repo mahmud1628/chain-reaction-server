@@ -23,12 +23,12 @@ app.post("/ai-move", (req, res) => {
       console.error(`C++ stderr: ${stderr}`);
     }
 
-    console.log(`C++ stdout: ${stdout}`);
+    const lines = stdout.trim().split("\n");
+    const [val, row, col] = lines[lines.length - 1].split(" ").map(Number);
+    console.log("Best value:", val);
+    console.log(`AI Move: Row ${row}, Col ${col}`);
 
-    // Now that C++ finished, we can safely read the updated file
-    const move = get_ai_move(board);  // compare previous board with updated one
-
-    res.json({ row: move.row, col: move.col });
+    res.json({ row : row, col : col });;
   });
 });
 

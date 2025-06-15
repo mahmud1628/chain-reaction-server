@@ -48,8 +48,8 @@ int main() {
     int  best_value = result.first;
     int best_row = result.second.first;
     int best_col = result.second.second;
-    cout << "Best value: " << best_value << endl;
-    cout << "Best move: (" << best_row << ", " << best_col << ")" << endl;
+    // cout << "Best value: " << best_value << endl;
+    // cout << "Best move: (" << best_row << ", " << best_col << ")" << endl;
 
     cells[best_row][best_col].set_count(cells[best_row][best_col].get_count() + 1);
     cells[best_row][best_col].set_color(AI);
@@ -67,6 +67,7 @@ int main() {
         outputFile << endl;
     }
     outputFile.close();
-    cout << "AI move saved to gameState.txt" << endl;
+    // cout << "AI move saved to gameState.txt" << endl;
+    cout << best_value << " " << best_row << " " << best_col << endl;
     return 0;
 }

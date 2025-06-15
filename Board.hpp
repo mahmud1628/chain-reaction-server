@@ -4,6 +4,8 @@
 #include <iostream>
 #include <vector>
 #include <limits>
+#include <algorithm>
+#include <chrono>
 
 #define Move pair<int, int>
 #define Coord pair<int, int>
@@ -37,6 +39,8 @@ private:
     int cols;                   // Number of columns in the board
     vector<vector<cell>> cells; // 2D vector to hold cells
 
+    std::chrono::time_point<std::chrono::high_resolution_clock> start_time; // Start time for move calculation
+
     vector<Move> get_valid_moves(char color);
     bool is_valid_move(int row, int col, char color);
     int get_critical_mass(int row, int col);
@@ -46,6 +50,7 @@ private:
     int minimax(int depth, bool is_maximizing_player, int alpha, int beta);
     int evaluate_board(char player);
     bool is_terminal_state();
+    int depth();
 
     // heuristics
     int orb_difference(char player);
@@ -139,9 +144,12 @@ void Board::generate_explosion(int start_row, int start_col, char current_player
     indices_of_current_exploding_cells.push_back(make_pair(start_row, start_col));
     char opponent_player = (current_player == HUMAN) ? AI : HUMAN;
     int opponent_orbs = count_of_orbs(opponent_player);
+    int explosion_count = 0;
 
     while (!indices_of_current_exploding_cells.empty())
     {
+        explosion_count++;
+        if(explosion_count > 20) break;
         vector<Coord> indices_of_next_exploding_cells;
         for (auto &index : indices_of_current_exploding_cells)
         {
@@ -267,7 +275,17 @@ bool Board::is_terminal_state()
 
 int Board::minimax(int depth, bool is_maximizing_player, int alpha, int beta)
 {
+
+    // static auto start_time = std::chrono::high_resolution_clock::now();
+    // auto current_time = std::chrono::high_resolution_clock::now();
+    // auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(current_time - start_time);
+    
+    // if (duration.count() > 10000) {
+    //     return evaluate_board(AI);
+    // }
     if (depth == 0 || is_terminal_state()) return evaluate_board(AI);
+
+    //cout << "Minimax depth: " << depth << ", is_maximizing_player: " << is_maximizing_player << endl;
 
     if (is_maximizing_player) // for AI player
     {
@@ -309,17 +327,19 @@ int Board::minimax(int depth, bool is_maximizing_player, int alpha, int beta)
 
 pair<int, Move> Board::get_ai_move()
 {
+    //start_time = std::chrono::high_resolution_clock::now();
     int best_value = INT_MIN;
     Move best_move = {-1, -1};
 
     vector<Move> valid_moves = get_valid_moves(AI);
     for (const Move &move : valid_moves)
     {
-        cout << "Evaluating move: (" << move.first << ", " << move.second << ") ";
+        //cout << "Evaluating move: (" << move.first << ", " << move.second << ") ";
         Board new_board = *this;
         new_board.update_cell(move, AI);
-        int move_value = new_board.minimax(DEPTH - 1, false, INT_MIN, INT_MAX);
-        cout << "Move value: " << move_value << endl;
+        int dpth = new_board.depth(); // Adjust depth based on the game state
+        int move_value = new_board.minimax(dpth - 1, false, INT_MIN, INT_MAX);
+        //cout << "Move value: " << move_value << endl;
         if (move_value > best_value)
         {
             best_value = move_value;
@@ -327,6 +347,19 @@ pair<int, Move> Board::get_ai_move()
         }
     }
     return make_pair(best_value, best_move);
+}
+
+int Board::depth()
+{
+    int total_orbs = count_of_orbs(HUMAN) + count_of_orbs(AI);
+    if (total_orbs <= 10)
+        return 5; // Early game
+    else if (total_orbs <= 20)
+        return 3; // Mid game
+    else if( total_orbs <= 30)
+        return 2; // Late game
+    else 
+        return 1; // End game
 }
 
 #endif // _BOARD_HPP
