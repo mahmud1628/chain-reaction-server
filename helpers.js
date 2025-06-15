@@ -26,22 +26,32 @@ const write_game_state = (board) => {
 }
 
 const get_ai_move = (board) => {
-    const file_data = fs.readFileSync(file_path, 'utf8');
+    const file_data = fs.readFileSync(file_path, 'utf8').trim();
     const lines = file_data.split('\n').slice(1); // Skip "AI Move:"
+
     for (let i = 0; i < board.length; i++) {
-        if (!lines[i]) continue;
-        const cells = lines[i].trim().split(' ');
+        const line = lines[i];
+        if (!line) continue;
+
+        const cells = line.trim().split(/\s+/); // handle multiple spaces
         for (let j = 0; j < board[i].length; j++) {
-            let cell = board[i][j];
+            const cell = board[i][j];
             let file_cell = cells[j];
-            let expected = (cell.count === 0 && cell.color === null) ? '0' : `${cell.count}${cell.color}`;
+            let expected = (cell.count === 0 && cell.color === null)
+                ? "0"
+                : `${cell.count}${cell.color}`;
+            file_cell = file_cell.trim();
+            expected = expected.trim();
             if (file_cell !== expected) {
+                // Found a mismatch
                 return { row: i, col: j };
             }
         }
+        console.log("");
     }
-    return null;
-}
+
+    return null; // No move found
+};
 
 
 exports.write_game_state = write_game_state;

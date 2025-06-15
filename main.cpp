@@ -62,7 +62,10 @@ int main() {
     outputFile << "AI Move:" << endl;
     for (int i = 0; i < ROWS; i++) {
         for (int j = 0; j < COLS; j++) {
-            outputFile << cells[i][j].get_count() << cells[i][j].get_color() << " ";
+            if(cells[i][j].get_color() != '\0')
+                outputFile << cells[i][j].get_count() << cells[i][j].get_color() << " ";
+            else 
+                outputFile << cells[i][j].get_count() << " "; // Only count if color is not set
         }
         outputFile << endl;
     }
