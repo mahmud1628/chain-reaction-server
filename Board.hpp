@@ -63,7 +63,7 @@ private:
 
     // heuristics
     int orb_difference();
-    int positional_advantage();
+    int positional_advantage_by_cells();
 
 public:
     Board(int rows, int cols) : rows(rows), cols(cols), cells(rows, vector<cell>(cols)) {}
@@ -257,9 +257,30 @@ int Board::orb_difference()
     return ai_orbs - human_orbs;
 }
 
+int Board::positional_advantage_by_cells()
+{
+    int advantage = 0; // respect to the AI player
+    for(int i =0; i < this->rows; i++)
+    {
+        for(int j = 0; j < this->cols; j++)
+        {
+            char cell_color = this->cells[i][j].get_color();
+            int cell_type = this->cells[i][j].get_cell_type();
+            int cell_advantage;
+            if(cell_type == CORNER_CELL || cell_type == EDGE_CELL) cell_advantage = 3;
+            else cell_advantage = 1;
+
+            if(cell_color == AI) advantage += cell_advantage;
+            else advantage -= cell_advantage;
+        }
+    }
+    return advantage;
+}
+
 int Board::evaluate_board()
 {
-    int score = orb_difference();
+    // int score = orb_difference();
+    int score = positional_advantage_by_cells();
     return score;
 }
 
