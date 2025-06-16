@@ -12,6 +12,13 @@
 #define AI 'B'    // blue player
 #define INT_MAX std::numeric_limits<int>::max()
 #define INT_MIN std::numeric_limits<int>::min()
+
+#define CORNER_CRITICAL_MASS 2
+#define EDGE_CRITICAL_MASS 3
+#define NORMAL_CRITICAL_MASS 4
+#define CORNER_CELL 1
+#define EDGE_CELL 2
+#define NORMAL_CELL 3
 using namespace std;
 
 class cell
@@ -19,12 +26,16 @@ class cell
 private:
     int count;
     char color;
+    int cell_type;
 
 public:
     cell() : count(0), color('\0') {}
-    cell(int c, char col) : count(c), color(col) {}
+    cell(int c, char col) : count(c), color(col), cell_type(0) {}
+    cell(int c, char col, int type) : count(c), color(col), cell_type(type) {}
     int get_count() const { return count; }
     char get_color() const { return color; }
+    int get_cell_type() const { return cell_type; }
+    void set_cell_type(int type) { cell_type = type; }
     void set_count(int c) { count = c; }
     void set_color(char col) { color = col; }
 };
@@ -47,6 +58,8 @@ private:
     bool is_terminal_state();
     int depth();
     bool is_winning_state(char player);
+    bool is_corner_cell(int row, int col);
+    bool is_edge_cell(int row, int col);
 
     // heuristics
     int orb_difference(char player);
@@ -67,6 +80,17 @@ void Board::set_board(const vector<vector<cell>> &new_cells)
         return;
     }
     this->cells = new_cells;
+    cout << "Board set successfully." << endl;
+    for(int i = 0; i < this->rows; i++)
+    {
+        for(int j = 0; j < this->cols; j++)
+        {
+            if(this->is_corner_cell(i, j)) this->cells[i][j].set_cell_type(CORNER_CELL);
+            else if(this->is_edge_cell(i, j)) this->cells[i][j].set_cell_type(EDGE_CELL);
+            else this->cells[i][j].set_cell_type(NORMAL_CELL);
+        }
+    }
+
 }
 
 bool Board::is_valid_move(int row, int col, char color)
@@ -78,31 +102,33 @@ bool Board::is_valid_move(int row, int col, char color)
     return false;
 }
 
-int Board::get_critical_mass(int row, int col)
+bool Board::is_corner_cell(int row, int col)
 {
     bool upper_left_corner = row == 0 && col == 0;
     bool upper_right_corner = row == 0 && col == this->cols - 1;
     bool lower_left_corner = row == this->rows - 1 && col == 0;
     bool lower_right_corner = row == this->rows - 1 && col == this->cols - 1;
     bool is_corner = upper_left_corner || upper_right_corner || lower_right_corner || lower_left_corner;
+    return is_corner;
+}
 
-    if (is_corner)
-    {
-        return 2; // Critical mass for corners is 2
-    }
-
+bool Board::is_edge_cell(int row, int col)
+{
     bool is_top_row = row == 0;
     bool is_bottom_row = row == this->rows - 1;
     bool is_left_column = col == 0;
     bool is_right_column = col == this->cols - 1;
     bool is_edge = is_top_row || is_bottom_row || is_left_column || is_right_column;
+    return is_edge;
+}
 
-    if (is_edge)
-    {
-        return 3; // Critical mass for edges is 3
-    }
+int Board::get_critical_mass(int row, int col)
+{
+    int cell_type = this->cells[row][col].get_cell_type();
 
-    return 4; // Critical mass for all other cells is 4
+    if(cell_type == CORNER_CELL) return CORNER_CRITICAL_MASS;
+    if(cell_type == EDGE_CELL) return EDGE_CRITICAL_MASS;
+    return NORMAL_CRITICAL_MASS;
 }
 
 vector<Move> Board::get_valid_moves(char color)
