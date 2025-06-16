@@ -14,7 +14,7 @@ app.post("/ai-move", (req, res) => {
 
   write_game_state(board); // write the original board to file
 
-  exec("main.exe", (error, stdout, stderr) => {
+  exec("a.exe", (error, stdout, stderr) => {
     if (error) {
       console.error(`Error executing C++ program: ${error.message}`);
       return res.status(500).json({ error: "C++ execution failed" });
