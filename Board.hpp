@@ -54,7 +54,7 @@ private:
     int count_of_orbs(char current_player);
     bool update_cell(Move move, char current_player);
     int minimax(int depth, bool is_maximizing_player, int alpha, int beta);
-    int evaluate_board(char player);
+    int evaluate_board();
     bool is_terminal_state();
     int depth();
     bool is_winning_state(char player);
@@ -62,7 +62,8 @@ private:
     bool is_edge_cell(int row, int col);
 
     // heuristics
-    int orb_difference(char player);
+    int orb_difference();
+    int positional_advantage();
 
 public:
     Board(int rows, int cols) : rows(rows), cols(cols), cells(rows, vector<cell>(cols)) {}
@@ -249,31 +250,16 @@ void Board::print_board()
     }
 }
 
-int Board::orb_difference(char player)
+int Board::orb_difference()
 {
-    int score = 0;
-    for (int i = 0; i < this->rows; i++)
-    {
-        for (int j = 0; j < this->cols; j++)
-        {
-            char cell_color = this->cells[i][j].get_color();
-            int cell_count = this->cells[i][j].get_count();
-            if (cell_color == player)
-            {
-                score += cell_count; // Add count for player's cells
-            }
-            else if (cell_color != '\0')
-            {                        // If the cell is occupied by the opponent
-                score -= cell_count; // Subtract count for opponent's cells
-            }
-        }
-    }
-    return score;
+    int ai_orbs = count_of_orbs(AI);
+    int human_orbs = count_of_orbs(HUMAN);
+    return ai_orbs - human_orbs;
 }
 
-int Board::evaluate_board(char player)
+int Board::evaluate_board()
 {
-    int score = orb_difference(player);
+    int score = orb_difference();
     return score;
 }
 
@@ -316,7 +302,7 @@ int Board::minimax(int depth, bool is_maximizing_player, int alpha, int beta)
     if(is_winning_state(AI)) return INT_MAX;
     if(is_winning_state(HUMAN)) return INT_MIN;
 
-    if (depth == 0) return evaluate_board(AI);
+    if (depth == 0) return evaluate_board();
 
     //cout << "Minimax depth: " << depth << ", is_maximizing_player: " << is_maximizing_player << endl;
 
