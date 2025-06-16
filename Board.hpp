@@ -393,7 +393,7 @@ bool Board::is_valid_index(int row, int col)
 
 int Board::evaluate_board(char player)
 {
-    int score = positional_advantage_by_cells(player);
+    int score = critical_cell_difference(player);
     return score;
 }
 
