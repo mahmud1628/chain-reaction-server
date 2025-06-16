@@ -46,7 +46,8 @@ int main() {
     Board board(ROWS, COLS);
     board.set_board(cells);
     // auto start = chrono::high_resolution_clock::now();
-    pair<int, pair<int, int>> result = board.get_ai_move();
+    // pair<int, pair<int, int>> result = board.get_best_move(AI);
+    pair<int, pair<int, int>> result = board.get_best_move(HUMAN); // for ai vs ai
     // auto end = chrono::high_resolution_clock::now();
     // auto duration = chrono::duration_cast<chrono::milliseconds>(end - start);
     int  best_value = result.first;

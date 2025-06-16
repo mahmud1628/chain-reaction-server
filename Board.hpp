@@ -53,8 +53,8 @@ private:
     void generate_explosion(int start_row, int start_col, char current_player);
     int count_of_orbs(char current_player);
     bool update_cell(Move move, char current_player);
-    int minimax(int depth, bool is_maximizing_player, int alpha, int beta);
-    int evaluate_board();
+    int minimax(int depth, bool is_maximizing_player, int alpha, int beta,char maximizing_player);
+    int evaluate_board(char player);
     bool is_terminal_state();
     int depth();
     bool is_winning_state(char player);
@@ -63,18 +63,18 @@ private:
     bool is_valid_index(int row, int col);
 
     // heuristics
-    int orb_difference();
-    int positional_advantage_by_cells();
-    int positional_advantage_by_orbs();
-    int critical_cell_difference();
-    int adjacency_advantage();
+    int orb_difference(char player);
+    int positional_advantage_by_cells(char player);
+    int positional_advantage_by_orbs(char player);
+    int critical_cell_difference(char player);
+    int adjacency_advantage(char player);
 
 public:
     Board(int rows, int cols) : rows(rows), cols(cols), cells(rows, vector<cell>(cols)) {}
     Board(const Board &other) : rows(other.rows), cols(other.cols), cells(other.cells) {}
     void set_board(const vector<vector<cell>> &new_cells);
     void print_board();
-    pair<int, Move> get_ai_move();
+    pair<int, Move> get_best_move(char player);
 };
 
 void Board::set_board(const vector<vector<cell>> &new_cells)
@@ -253,16 +253,18 @@ void Board::print_board()
     }
 }
 
-int Board::orb_difference()
+int Board::orb_difference(char player)
 {
-    int ai_orbs = count_of_orbs(AI);
-    int human_orbs = count_of_orbs(HUMAN);
-    return ai_orbs - human_orbs;
+    char opponent_player = (player == HUMAN) ? AI : HUMAN;
+    int orbs = count_of_orbs(player);
+    int opponent_orbs = count_of_orbs(opponent_player);
+    return orbs - opponent_orbs;
 }
 
-int Board::positional_advantage_by_cells()
+int Board::positional_advantage_by_cells(char player)
 {
-    int advantage = 0; // respect to the AI player
+    char opponent_player = (player == HUMAN) ? AI : HUMAN;
+    int advantage = 0;
     for(int i =0; i < this->rows; i++)
     {
         for(int j = 0; j < this->cols; j++)
@@ -274,16 +276,17 @@ int Board::positional_advantage_by_cells()
             if(cell_type == CORNER_CELL || cell_type == EDGE_CELL) cell_advantage = 2;
             else cell_advantage = 1;
 
-            if(cell_color == AI) advantage += cell_advantage;
-            else if(cell_color == HUMAN) advantage -= cell_advantage;
+            if(cell_color == player) advantage += cell_advantage;
+            else if(cell_color == opponent_player) advantage -= cell_advantage;
         }
     }
     return advantage;
 }
 
-int Board::positional_advantage_by_orbs()
+int Board::positional_advantage_by_orbs(char player)
 {
-    int advantage = 0; // respect to the AI player
+    char opponent_player = (player == HUMAN) ? AI : HUMAN;
+    int advantage = 0;
     for(int i = 0; i < this->rows; i++)
     {
         for(int j = 0; j < this->cols; j++)
@@ -297,17 +300,18 @@ int Board::positional_advantage_by_orbs()
             if(cell_type == CORNER_CELL || cell_type == EDGE_CELL) cell_advantage = 2;
             else cell_advantage = 1;
 
-            if(cell_color == AI) advantage += cell_count * cell_advantage;
+            if(cell_color == player) advantage += cell_count * cell_advantage;
             else advantage -= cell_count * cell_advantage;
         }
     }
     return advantage;
 }
 
-int Board::critical_cell_difference()
+int Board::critical_cell_difference(char player)
 {
-    int ai_critical_cells = 0;
-    int human_critical_cells = 0;
+    char opponent_player = (player == HUMAN) ? AI : HUMAN;
+    int critical_cells = 0;
+    int opponent_critical_cells = 0;
 
     for (int i = 0; i < this->rows; i++)
     {
@@ -318,18 +322,19 @@ int Board::critical_cell_difference()
             int critical_mass = get_critical_mass(i, j);
 
             if(cell_count == critical_mass - 1) {
-                if(cell_color == AI) ai_critical_cells++;
-                else if(cell_color == HUMAN) human_critical_cells++;
+                if(cell_color == player) critical_cells++;
+                else if(cell_color == opponent_player) opponent_critical_cells++;
             }
             
         }
     }
-    return ai_critical_cells - human_critical_cells;
+    return critical_cells - opponent_critical_cells;
 }
 
-int Board::adjacency_advantage() 
+int Board::adjacency_advantage(char player) 
 {
-    int advantage = 0; // resprect to the AI player
+    char opponent_player = (player == HUMAN) ? AI : HUMAN;
+    int advantage = 0;
     for(int i = 0; i < this->rows; i++)
     {
         for(int j =0; j< this->cols; j++)
@@ -347,14 +352,14 @@ int Board::adjacency_advantage()
                 {i, j + 1}  // Right
             };
 
-            if(cell_color == AI) {
+            if(cell_color == player) {
                 cell_advantage += cell_count;
                 for(auto &index : indices_of_orthogonal_cells){
                     int row = index.first, col = index.second;
                     if(is_valid_index(row, col)) {
-                        if(cells[row][col].get_color() == AI) {
+                        if(cells[row][col].get_color() == player) {
                             cell_advantage += (cell_count == critical_mass - 1) ? 2 : 1;
-                        } else if(cells[row][col].get_color() == HUMAN) {
+                        } else if(cells[row][col].get_color() == opponent_player) {
                             cell_disadvantage  += 1;
                         }
                     }
@@ -365,9 +370,9 @@ int Board::adjacency_advantage()
                 for(auto &index : indices_of_orthogonal_cells){
                     int row = index.first, col = index.second;
                     if(is_valid_index(row, col)) {
-                        if(cells[row][col].get_color() == AI) {
+                        if(cells[row][col].get_color() == player) {
                             cell_disadvantage += (cell_count == critical_mass - 1) ? 2 : 1;
-                        } else if(cells[row][col].get_color() == HUMAN) {
+                        } else if(cells[row][col].get_color() == opponent_player) {
                             cell_advantage  += 1;
                         }
                     }
@@ -386,10 +391,9 @@ bool Board::is_valid_index(int row, int col)
     return is_valid_row && is_valid_col;
 }
 
-int Board::evaluate_board()
+int Board::evaluate_board(char player)
 {
-    // int score = orb_difference();
-    int score = adjacency_advantage();
+    int score = positional_advantage_by_cells(player);
     return score;
 }
 
@@ -427,16 +431,17 @@ bool Board::is_winning_state(char player)
     return true;
 }
 
-int Board::minimax(int depth, bool is_maximizing_player, int alpha, int beta)
+int Board::minimax(int depth, bool is_maximizing_player, int alpha, int beta, char maximizing_player)
 {
-    if(is_winning_state(AI)) return INT_MAX;
-    if(is_winning_state(HUMAN)) return INT_MIN;
+    char opponent_player = (maximizing_player == HUMAN) ? AI : HUMAN;
+    if(is_winning_state(maximizing_player)) return INT_MAX;
+    if(is_winning_state(opponent_player)) return INT_MIN;
 
-    if (depth == 0) return evaluate_board();
+    if (depth == 0) return evaluate_board(maximizing_player);
 
     //cout << "Minimax depth: " << depth << ", is_maximizing_player: " << is_maximizing_player << endl;
 
-    if (is_maximizing_player) // for AI player
+    if (is_maximizing_player) // for maximizing player
     {
         int max_eval = INT_MIN;
         vector<Move> valid_moves = get_valid_moves(AI);
@@ -444,7 +449,7 @@ int Board::minimax(int depth, bool is_maximizing_player, int alpha, int beta)
         {
             Board new_board = *this;
             new_board.update_cell(move, AI);
-            int eval = new_board.minimax(depth - 1, false, alpha, beta);
+            int eval = new_board.minimax(depth - 1, false, alpha, beta, maximizing_player);
             max_eval = max(max_eval, eval);
             alpha = max(alpha, eval);
             if (beta <= alpha)
@@ -454,7 +459,7 @@ int Board::minimax(int depth, bool is_maximizing_player, int alpha, int beta)
         }
         return max_eval;
     }
-    else // for human player
+    else // for minimizing player
     {
         int min_eval = INT_MAX;
         vector<Move> valid_moves = get_valid_moves(HUMAN);
@@ -462,7 +467,7 @@ int Board::minimax(int depth, bool is_maximizing_player, int alpha, int beta)
         {
             Board new_board = *this;
             new_board.update_cell(move, HUMAN);
-            int eval = new_board.minimax(depth - 1, true, alpha, beta);
+            int eval = new_board.minimax(depth - 1, true, alpha, beta, maximizing_player);
             min_eval = min(min_eval, eval);
             beta = min(beta, eval);
             if (beta <= alpha)
@@ -474,19 +479,19 @@ int Board::minimax(int depth, bool is_maximizing_player, int alpha, int beta)
     }
 }
 
-pair<int, Move> Board::get_ai_move()
+pair<int, Move> Board::get_best_move(char player)
 {
     int best_value = INT_MIN;
     Move best_move = {-1, -1};
 
-    vector<Move> valid_moves = get_valid_moves(AI);
+    vector<Move> valid_moves = get_valid_moves(player);
     for (const Move &move : valid_moves)
     {
         cout << "Evaluating move: (" << move.first << ", " << move.second << ") ";
         Board new_board = *this;
         new_board.update_cell(move, AI);
         int dpth = new_board.depth(); // Adjust depth based on the game state
-        int move_value = new_board.minimax(dpth - 1, false, best_value, INT_MAX);
+        int move_value = new_board.minimax(dpth - 1, false, best_value, INT_MAX, player);
         cout << "Move value: " << move_value << endl;
         if (move_value > best_value)
         {
