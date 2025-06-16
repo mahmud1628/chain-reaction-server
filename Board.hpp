@@ -444,11 +444,11 @@ int Board::minimax(int depth, bool is_maximizing_player, int alpha, int beta, ch
     if (is_maximizing_player) // for maximizing player
     {
         int max_eval = INT_MIN;
-        vector<Move> valid_moves = get_valid_moves(AI);
+        vector<Move> valid_moves = get_valid_moves(maximizing_player);
         for (const Move &move : valid_moves)
         {
             Board new_board = *this;
-            new_board.update_cell(move, AI);
+            new_board.update_cell(move, maximizing_player);
             int eval = new_board.minimax(depth - 1, false, alpha, beta, maximizing_player);
             max_eval = max(max_eval, eval);
             alpha = max(alpha, eval);
@@ -462,11 +462,11 @@ int Board::minimax(int depth, bool is_maximizing_player, int alpha, int beta, ch
     else // for minimizing player
     {
         int min_eval = INT_MAX;
-        vector<Move> valid_moves = get_valid_moves(HUMAN);
+        vector<Move> valid_moves = get_valid_moves(opponent_player);
         for (const Move &move : valid_moves)
         {
             Board new_board = *this;
-            new_board.update_cell(move, HUMAN);
+            new_board.update_cell(move, opponent_player);
             int eval = new_board.minimax(depth - 1, true, alpha, beta, maximizing_player);
             min_eval = min(min_eval, eval);
             beta = min(beta, eval);
@@ -489,7 +489,7 @@ pair<int, Move> Board::get_best_move(char player)
     {
         cout << "Evaluating move: (" << move.first << ", " << move.second << ") ";
         Board new_board = *this;
-        new_board.update_cell(move, AI);
+        new_board.update_cell(move, player);
         int dpth = new_board.depth(); // Adjust depth based on the game state
         int move_value = new_board.minimax(dpth - 1, false, best_value, INT_MAX, player);
         cout << "Move value: " << move_value << endl;
