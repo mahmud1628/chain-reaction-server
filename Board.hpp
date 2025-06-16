@@ -60,10 +60,14 @@ private:
     bool is_winning_state(char player);
     bool is_corner_cell(int row, int col);
     bool is_edge_cell(int row, int col);
+    bool is_valid_index(int row, int col);
 
     // heuristics
     int orb_difference();
     int positional_advantage_by_cells();
+    int positional_advantage_by_orbs();
+    int critical_cell_difference();
+    int adjacency_advantage();
 
 public:
     Board(int rows, int cols) : rows(rows), cols(cols), cells(rows, vector<cell>(cols)) {}
@@ -265,22 +269,128 @@ int Board::positional_advantage_by_cells()
         for(int j = 0; j < this->cols; j++)
         {
             char cell_color = this->cells[i][j].get_color();
+            if(cell_color == '\0') continue; // Skip empty cells
             int cell_type = this->cells[i][j].get_cell_type();
             int cell_advantage;
-            if(cell_type == CORNER_CELL || cell_type == EDGE_CELL) cell_advantage = 3;
+            if(cell_type == CORNER_CELL || cell_type == EDGE_CELL) cell_advantage = 2;
             else cell_advantage = 1;
 
             if(cell_color == AI) advantage += cell_advantage;
-            else advantage -= cell_advantage;
+            else if(cell_color == HUMAN) advantage -= cell_advantage;
         }
     }
     return advantage;
 }
 
+int Board::positional_advantage_by_orbs()
+{
+    int advantage = 0; // respect to the AI player
+    for(int i = 0; i < this->rows; i++)
+    {
+        for(int j = 0; j < this->cols; j++)
+        {
+            char cell_color = this->cells[i][j].get_color();
+            int cell_count = this->cells[i][j].get_count();
+            int cell_type = this->cells[i][j].get_cell_type();
+            if(cell_count == 0) continue; // Skip empty cells
+
+            int cell_advantage;
+            if(cell_type == CORNER_CELL || cell_type == EDGE_CELL) cell_advantage = 2;
+            else cell_advantage = 1;
+
+            if(cell_color == AI) advantage += cell_count * cell_advantage;
+            else advantage -= cell_count * cell_advantage;
+        }
+    }
+    return advantage;
+}
+
+int Board::critical_cell_difference()
+{
+    int ai_critical_cells = 0;
+    int human_critical_cells = 0;
+
+    for (int i = 0; i < this->rows; i++)
+    {
+        for (int j = 0; j < this->cols; j++)
+        {
+            char cell_color = this->cells[i][j].get_color();
+            int cell_count = this->cells[i][j].get_count();
+            int critical_mass = get_critical_mass(i, j);
+
+            if(cell_count == critical_mass - 1) {
+                if(cell_color == AI) ai_critical_cells++;
+                else if(cell_color == HUMAN) human_critical_cells++;
+            }
+            
+        }
+    }
+    return ai_critical_cells - human_critical_cells;
+}
+
+int Board::adjacency_advantage() 
+{
+    int advantage = 0; // resprect to the AI player
+    for(int i = 0; i < this->rows; i++)
+    {
+        for(int j =0; j< this->cols; j++)
+        {
+            int cell_advantage = 0, cell_disadvantage = 0;
+            int cell_count = this->cells[i][j].get_count();
+            if(cell_count == 0) continue;
+            char cell_color = this->cells[i][j].get_color();
+            int critical_mass = get_critical_mass(i, j);
+
+            vector<Coord> indices_of_orthogonal_cells = {
+                {i - 1, j}, // Up
+                {i + 1, j}, // Down
+                {i, j - 1}, // Left
+                {i, j + 1}  // Right
+            };
+
+            if(cell_color == AI) {
+                cell_advantage += cell_count;
+                for(auto &index : indices_of_orthogonal_cells){
+                    int row = index.first, col = index.second;
+                    if(is_valid_index(row, col)) {
+                        if(cells[row][col].get_color() == AI) {
+                            cell_advantage += (cell_count == critical_mass - 1) ? 2 : 1;
+                        } else if(cells[row][col].get_color() == HUMAN) {
+                            cell_disadvantage  += 1;
+                        }
+                    }
+                }
+            }
+            else {
+                cell_disadvantage += cell_count;
+                for(auto &index : indices_of_orthogonal_cells){
+                    int row = index.first, col = index.second;
+                    if(is_valid_index(row, col)) {
+                        if(cells[row][col].get_color() == AI) {
+                            cell_disadvantage += (cell_count == critical_mass - 1) ? 2 : 1;
+                        } else if(cells[row][col].get_color() == HUMAN) {
+                            cell_advantage  += 1;
+                        }
+                    }
+                }
+            }
+                    advantage += cell_advantage - cell_disadvantage;
+        }
+    }
+    return advantage;
+}
+
+bool Board::is_valid_index(int row, int col)
+{
+    bool is_valid_row = row >= 0 && row < this->rows;
+    bool is_valid_col = col >= 0 && col < this->cols;
+    return is_valid_row && is_valid_col;
+}
+
 int Board::evaluate_board()
 {
     // int score = orb_difference();
-    int score = positional_advantage_by_cells();
+    int score = adjacency_advantage();
     return score;
 }
 
