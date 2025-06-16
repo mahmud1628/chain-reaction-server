@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include "Board.hpp"
+#include <chrono>
 #define ROWS 9
 #define COLS 6
 using namespace std;
@@ -44,7 +45,10 @@ int main() {
 
     Board board(ROWS, COLS);
     board.set_board(cells);
+    // auto start = chrono::high_resolution_clock::now();
     pair<int, pair<int, int>> result = board.get_ai_move();
+    // auto end = chrono::high_resolution_clock::now();
+    // auto duration = chrono::duration_cast<chrono::milliseconds>(end - start);
     int  best_value = result.first;
     int best_row = result.second.first;
     int best_col = result.second.second;
@@ -70,5 +74,13 @@ int main() {
     outputFile.close();
     // cout << "AI move saved to gameState.txt" << endl;
     cout << best_value << " " << best_row << " " << best_col << endl;
+
+
+    // ofstream logFile("log.txt", ios::app); // for experimental purposes
+    // if (!logFile) {
+    //     cerr << "Error opening log file." << endl;
+    //     return 1;
+    // }
+    // logFile << duration.count() << " ms" << endl;
     return 0;
 }

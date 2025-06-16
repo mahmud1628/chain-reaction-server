@@ -85,7 +85,6 @@ void Board::set_board(const vector<vector<cell>> &new_cells)
         return;
     }
     this->cells = new_cells;
-    cout << "Board set successfully." << endl;
     for(int i = 0; i < this->rows; i++)
     {
         for(int j = 0; j < this->cols; j++)
@@ -374,7 +373,7 @@ int Board::adjacency_advantage()
                     }
                 }
             }
-                    advantage += cell_advantage - cell_disadvantage;
+            advantage += cell_advantage - cell_disadvantage;
         }
     }
     return advantage;
@@ -483,17 +482,20 @@ pair<int, Move> Board::get_ai_move()
     vector<Move> valid_moves = get_valid_moves(AI);
     for (const Move &move : valid_moves)
     {
-        // cout << "Evaluating move: (" << move.first << ", " << move.second << ") ";
+        cout << "Evaluating move: (" << move.first << ", " << move.second << ") ";
         Board new_board = *this;
         new_board.update_cell(move, AI);
         int dpth = new_board.depth(); // Adjust depth based on the game state
         int move_value = new_board.minimax(dpth - 1, false, best_value, INT_MAX);
-        //cout << "Move value: " << move_value << endl;
+        cout << "Move value: " << move_value << endl;
         if (move_value > best_value)
         {
             best_value = move_value;
             best_move = move;
         }
+    }
+    if(best_move.first == -1) {
+        best_move = valid_moves[0]; // If no best moves, return the first valid move
     }
     return make_pair(best_value, best_move);
 }
@@ -501,14 +503,10 @@ pair<int, Move> Board::get_ai_move()
 int Board::depth()
 {
     int total_orbs = count_of_orbs(HUMAN) + count_of_orbs(AI);
-    if (total_orbs <= 10)
-        return 5; // Early game
-    else if (total_orbs <= 20)
-        return 3; // Mid game
-    // else if( total_orbs <= 30)
-    //     return 3; // Late game
+    if (total_orbs <= 20)
+        return 3;
     else 
-        return 2; // End game
+        return 2;
 }
 
 #endif // _BOARD_HPP
