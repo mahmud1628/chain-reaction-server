@@ -16,10 +16,11 @@ public class GameController {
     @Autowired
     private GameService gameService;
 
-    @PostMapping("/ai-move")
+    @PostMapping(value = "/ai-move", produces = "application/json")
     public ResponseEntity<AiMove> getAiMove(@RequestBody BoardDto boardDto) {
         try {
             AiMove aiMove = gameService.getAiMove(boardDto);
+            // System.out.println("AI Move: (" + aiMove.getRow() + ", " + aiMove.getCol() + ")");
             return ResponseEntity.ok(aiMove);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();

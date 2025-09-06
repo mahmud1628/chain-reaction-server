@@ -5,11 +5,6 @@ public class Cell {
     private char color;
     private int cell_type;
 
-    public Cell() {
-        this.count = 0;
-        this.color = '\0';
-    }
-
     public Cell(int count, char color) {
         this.count = count;
         this.color = color;

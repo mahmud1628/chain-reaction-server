@@ -7,6 +7,12 @@ import org.springframework.stereotype.Service;
 @Service
 public class GameService {
     public AiMove getAiMove(BoardDto boardDto) {
-        return null;
+        Board board = BoardMapper.fromDto(boardDto);
+        // board.printBoard();
+        try {
+            return board.getAiMove();
+        } catch(Exception e) {
+            throw new RuntimeException("Error getting AI move", e);
+        }
     }
 }

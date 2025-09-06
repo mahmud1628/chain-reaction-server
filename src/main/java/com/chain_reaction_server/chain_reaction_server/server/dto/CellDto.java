@@ -1,8 +1,8 @@
 package com.chain_reaction_server.chain_reaction_server.server.dto;
 
 public class CellDto {
-    private int count;
-    private char color;
+    private final int count;
+    private final char color;
 
     public CellDto() {
         this.count = 0;
@@ -18,15 +18,7 @@ public class CellDto {
         return count;
     }
 
-    public void setCount(int count) {
-        this.count = count;
-    }
-
     public char getColor() {
         return color;
-    }
-
-    public void setColor(char color) {
-        this.color = color;
     }
 }
